@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+        - name: busybox
+          image: progrium/busybox
+          command: [ "/bin/sh","-c" ]
+          args: [ "opkg-install curl vim ; sleep 36000" ] #需要安装的软件 添加在vim 空格隔开即可

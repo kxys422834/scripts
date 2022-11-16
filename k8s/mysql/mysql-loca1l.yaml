@@ -1,0 +1,83 @@
+# 指定节点单机部署mysql
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-cm
+  namespace: dev
+  labels:
+    app: mysql
+data:
+  my.cnf: |
+    [mysqld]
+    datadir=/var/lib/mysql
+    socket=/var/lib/mysql/mysql.sock
+    lower_case_table_names=1
+    skip-name-resolve
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: dev
+  labels:
+    app: mysql
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: mysql
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: dev
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: node5
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: localtime-data
+              mountPath: /etc/localtime
+              readOnly: true
+            - name: mysql-conf
+              mountPath: /etc/my.cnf
+              subPath: my.cnf
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "123456"
+      volumes:
+        - name: mysql-data
+          hostPath:
+            path: /var/lib/mysql
+        - name: localtime-data
+          hostPath:
+            path: /etc/localtime
+        - name: mysql-conf
+          configMap:
+            name: mysql-cm
+            items:
+              - key: my.cnf
+                path: my.cnf

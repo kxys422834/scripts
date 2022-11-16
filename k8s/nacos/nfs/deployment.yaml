@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-client-provisioner
+  namespace: nacos
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-client-provisioner
+  namespace: nacos
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccount: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          # nacos官方部署原始镜像：quay.io/external_storage/nfs-client-provisioner:latest
+          # 一直pending。原因：https://zhuanlan.zhihu.com/p/468467734 ; k8s默认移除了SelfLink 
+          # 国外镜像：gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:v4.0.0 ; 无法下载
+          # 国内镜像: registry.cn-beijing.aliyuncs.com/pylixm/nfs-subdir-external-provisioner:v4.0.0
+          image: registry.cn-beijing.aliyuncs.com/pylixm/nfs-subdir-external-provisioner:v4.0.0
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: fuseim.pri/ifs
+            - name: NFS_SERVER
+              value: 10.5.96.69
+            - name: NFS_PATH
+              value: /home/nfs/nacos
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 10.5.96.69
+            path: /home/nfs/nacos

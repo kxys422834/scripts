@@ -1,0 +1,51 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+test-classes/
+target/
+bin/
+
+#eclipse
+.project
+.classpath
+.settings/
+
+#idea
+.idea
+*.iml
+
+logs/
+*.log
+
+# package
+out
+
+.DS_Store
+node_modules
+/dist
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+package-lock.json
+
+# my
+application-local.yml
+codeg.xml

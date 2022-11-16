@@ -1,0 +1,81 @@
+# 指定节点单机部署mysql
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-cm
+  namespace: default
+  labels:
+    app: mysql
+data:
+  my.cnf: |
+    [mysqld]
+    datadir=/var/lib/mysql
+    socket=/var/lib/mysql/mysql.sock
+    lower_case_table_names=1
+    skip-name-resolve
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: default
+  labels:
+    app: mysql
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: mysql
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: default
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: mysql-conf
+              mountPath: /etc/my.cnf
+              subPath: my.cnf
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root@123"
+            - name: MYSQL_DATABASE
+              value: "nacos"
+            - name: MYSQL_USER
+              value: "nacos"
+            - name: MYSQL_PASSWORD
+              value: "nacos@123"
+      volumes:
+        - name: mysql-data
+          nfs:
+            server: 10.5.96.69
+            path: /home/nfs/mysql
+        - name: mysql-conf
+          configMap:
+            name: mysql-cm
+            items:
+              - key: my.cnf
+                path: my.cnf
