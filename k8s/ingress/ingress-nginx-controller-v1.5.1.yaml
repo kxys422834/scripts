@@ -378,8 +378,8 @@ spec:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
-  #type: LoadBalancer
-  type: NodePort
+  type: LoadBalancer
+  #type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -508,6 +508,9 @@ spec:
               name: webhook-cert
               readOnly: true
       dnsPolicy: ClusterFirst
+      # 一种pod网络模式, pod可直接看到宿主机端口，宿主机所在网络也可直接访问到该应用程序及端口
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
         kubernetes.io/os: linux
       serviceAccountName: ingress-nginx
